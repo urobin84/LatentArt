@@ -1,0 +1,12 @@
+diffusers
+transformers
+accelerate
+streamlit
+streamlit-drawable-canvas
+opencv-python
+torch
+torchvision
+python-dotenv
+ipykernel
+matplotlib
+typing-extensions
