@@ -21,12 +21,11 @@ setup:
 	$(PIP) install nbconvert jupyter
 
 run:
-	@echo "Executing notebook: $(NOTEBOOK)..."
-	$(JUPYTER) nbconvert --to notebook --execute --inplace $(NOTEBOOK)
-	@echo "Execution complete. Check the 'outputs/' directory for results."
+	@echo "Launching Jupyter Notebook: $(NOTEBOOK)..."
+	$(JUPYTER) notebook $(NOTEBOOK)
 
 streamlit:
-$(PYTHON) -m streamlit run src/app.py
+	$(PYTHON) -m streamlit run src/app.py
 
 clean:
 	rm -rf $(VENV)
