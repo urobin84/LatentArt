@@ -2,6 +2,7 @@ import torch
 from diffusers import (
     StableDiffusionPipeline, 
     StableDiffusionImg2ImgPipeline,
+    StableDiffusionInpaintPipeline,
     EulerAncestralDiscreteScheduler, 
     DPMSolverMultistepScheduler, 
     DDIMScheduler
@@ -102,6 +103,43 @@ def generate_refined_image(pipe, prompt, negative_prompt, init_image, strength=0
         negative_prompt=negative_prompt,
         image=init_image,
         strength=strength,
+        guidance_scale=guidance_scale,
+        num_inference_steps=num_inference_steps,
+        generator=generator
+    ).images[0]
+    
+    return image
+
+def setup_inpaint_pipeline(model_id="runwayml/stable-diffusion-inpainting", device="cpu"):
+    """
+    Inisialisasi pipeline khusus Inpainting/Outpainting.
+    """
+    dtype = torch.float16 if device in ["cuda", "mps"] else torch.float32
+    
+    pipe = StableDiffusionInpaintPipeline.from_pretrained(
+        model_id, 
+        torch_dtype=dtype
+    )
+    
+    if device == "mps":
+        pipe = pipe.to("mps")
+    elif device == "cuda":
+        pipe = pipe.to("cuda")
+        pipe.enable_xformers_memory_efficient_attention()
+    
+    return pipe
+
+def generate_inpainted_image(pipe, prompt, negative_prompt, init_image, mask_image, guidance_scale=7.5, num_inference_steps=50, seed=9):
+    """
+    Fungsi untuk Inpainting maupun Outpainting (dengan Canvas + Mask yang di-pass).
+    """
+    generator = torch.Generator(device=pipe.device).manual_seed(seed)
+    
+    image = pipe(
+        prompt=prompt,
+        negative_prompt=negative_prompt,
+        image=init_image,
+        mask_image=mask_image,
         guidance_scale=guidance_scale,
         num_inference_steps=num_inference_steps,
         generator=generator
