@@ -25,7 +25,7 @@ run:
 	$(JUPYTER) notebook $(NOTEBOOK)
 
 streamlit:
-	$(PYTHON) -m streamlit run src/app.py
+	$(PYTHON) -m streamlit run app.py
 
 clean:
 	rm -rf $(VENV)

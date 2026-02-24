@@ -16,18 +16,21 @@ def setup_pipeline(model_id="runwayml/stable-diffusion-v1-5", device="cpu"):
     
     pipe = StableDiffusionPipeline.from_pretrained(
         model_id, 
-        torch_dtype=dtype
+        torch_dtype=dtype,
+        safety_checker=None,
+        requires_safety_checker=False
     )
     
     if device == "mps":
-        pipe = pipe.to("mps")
-        # Optimization disabled to prevent slowdowns on M-chips with enough memory
+        pipe.enable_attention_slicing()
+        pipe.enable_vae_slicing()
+        pipe.enable_vae_tiling()
+        pipe.enable_model_cpu_offload()
     elif device == "cuda":
         pipe = pipe.to("cuda")
         pipe.enable_xformers_memory_efficient_attention()
     
     return pipe
-
 def load_scheduler(pipe, scheduler_name):
     """
     Mengganti algoritma sampling tanpa reload model.
@@ -71,25 +74,33 @@ def generate_advanced_image(pipe, prompt, negative_prompt, guidance_scale, num_i
     
     return image
 
-def setup_refiner_pipeline(model_id="runwayml/stable-diffusion-v1-5", device="cpu"):
+def setup_refiner_pipeline(model_id="runwayml/stable-diffusion-v1-5", device="cpu", base_components=None):
     """
     Inisialisasi pipeline Img2Img untuk proses refinement.
     """
     dtype = torch.float16 if device in ["cuda", "mps"] else torch.float32
     
-    pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
-        model_id, 
-        torch_dtype=dtype
-    )
+    if base_components:
+        pipe = StableDiffusionImg2ImgPipeline(**base_components)
+    else:
+        pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+            model_id, 
+            torch_dtype=dtype,
+            safety_checker=None,
+            requires_safety_checker=False
+        )
     
     if device == "mps":
-        pipe = pipe.to("mps")
+        pipe.enable_attention_slicing()
+        pipe.enable_vae_slicing()
+        pipe.enable_vae_tiling()
+        pipe.enable_model_cpu_offload()
     elif device == "cuda":
-        pipe = pipe.to("cuda")
+        if not base_components:
+            pipe = pipe.to("cuda")
         pipe.enable_xformers_memory_efficient_attention()
     
     return pipe
-
 def generate_refined_image(pipe, prompt, negative_prompt, init_image, strength=0.8, guidance_scale=8.0, num_inference_steps=50, seed=222):
     """
     Fungsi penyempurnaan gambar (Refiner) dengan menggunakan img2img.
@@ -118,17 +129,21 @@ def setup_inpaint_pipeline(model_id="runwayml/stable-diffusion-inpainting", devi
     
     pipe = StableDiffusionInpaintPipeline.from_pretrained(
         model_id, 
-        torch_dtype=dtype
+        torch_dtype=dtype,
+        safety_checker=None,
+        requires_safety_checker=False
     )
     
     if device == "mps":
-        pipe = pipe.to("mps")
+        pipe.enable_attention_slicing()
+        pipe.enable_vae_slicing()
+        pipe.enable_vae_tiling()
+        pipe.enable_model_cpu_offload()
     elif device == "cuda":
         pipe = pipe.to("cuda")
         pipe.enable_xformers_memory_efficient_attention()
     
     return pipe
-
 def generate_inpainted_image(pipe, prompt, negative_prompt, init_image, mask_image, guidance_scale=7.5, num_inference_steps=50, seed=9):
     """
     Fungsi untuk Inpainting maupun Outpainting (dengan Canvas + Mask yang di-pass).
