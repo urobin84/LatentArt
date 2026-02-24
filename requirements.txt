@@ -1,12 +1,9 @@
+torch
+torchvision
 diffusers
 transformers
 accelerate
 streamlit
-streamlit-drawable-canvas
-opencv-python
-torch
-torchvision
-python-dotenv
-ipykernel
+streamlit-drawable-canvas==0.8.0
 matplotlib
-typing-extensions
+pyngrok
