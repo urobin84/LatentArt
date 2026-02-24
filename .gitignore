@@ -182,6 +182,7 @@ outputs/
 # Model weights
 *.ckpt
 *.safetensors
+LatentArt-Model/
 
 # temporary scripts
 run_generation.py
