@@ -130,10 +130,16 @@ if st.sidebar.button("🔌 Initialize Engine (Load 4GB Weights)"):
             start_load = time.time()
             clear_memory()
             
-            st.session_state.pipe_t2i = setup_pipeline(device=device)
+            # Use local model path if it exists, otherwise use HF ID
+            local_model_path = "LatentArt-Model"
+            import os
+            model_id = local_model_path if os.path.exists(local_model_path) else "runwayml/stable-diffusion-v1-5"
+            
+            st.session_state.pipe_t2i = setup_pipeline(model_id=model_id, device=device)
             st.session_state.pipe_t2i = load_scheduler(st.session_state.pipe_t2i, scheduler_choice)
             
             st.session_state.pipe_img2img = setup_refiner_pipeline(
+                model_id=model_id,
                 device=device,
                 base_components=st.session_state.pipe_t2i.components
             )
@@ -144,84 +150,83 @@ if st.sidebar.button("🔌 Initialize Engine (Load 4GB Weights)"):
         except Exception as e:
             st.sidebar.error(f"Error loading models: {e}")
 
-# --- Generate Images Logic (TABS Layout) ---
-tab1, tab2 = st.tabs(["✨ Stage 1: Base Generation (Text-to-Image)", "🪄 Stage 2: Refinement (Image-to-Image)"])
+# --- Generate Images Logic (Side-by-Side Comparison) ---
+st.markdown("### 🎨 Creative Workflow")
 
-with tab1:
-    col_t1, col_t2 = st.columns([1, 2])
-    with col_t1:
-        st.markdown("### Base Generation")
-        st.write("Constructs the initial structural composition from pure noise based on your text prompt.")
-        st.info("The base model is good with overall composition but might lack micro-details.")
-        
-        generate_btn = st.button("🚀 Generate Draft Concept", use_container_width=True)
+col_left, col_right = st.columns(2)
+
+with col_left:
+    st.markdown("#### ✨ Stage 1: Base Generation")
+    st.caption("Constructs the initial structural composition from pure noise.")
     
-    with col_t2:
-        if generate_btn:
-            if not st.session_state.models_loaded:
-                st.error("⚠️ Please click 'Initialize Engine' in the sidebar first!")
-            else:
-                with st.spinner("Weaving Latent Space into Reality (Processing on M1)..."):
-                    clear_memory()
-                    load_scheduler(st.session_state.pipe_t2i, scheduler_choice)
-                    start_time = time.time()
-                    try:
-                        img = generate_advanced_image(
-                            st.session_state.pipe_t2i,
-                            prompt,
-                            negative_prompt,
-                            guidance_scale,
-                            inference_steps,
-                            seed
-                        )
-                        st.session_state.base_image = img
-                        st.success(f"Concept drafted in {time.time() - start_time:.1f} seconds!")
-                    except RuntimeError as e:
-                        if "out of memory" in str(e).lower():
-                            st.error("GPU Out of Memory! Try lowering the inference steps.")
-                        else:
-                            st.error(f"Generation Error: {e}")
-
-        if st.session_state.base_image:
-            st.image(st.session_state.base_image, caption="Stage 1: Base Concept Draft (512x512)", use_container_width=True)
-            
-            with open("outputs/basic_t2i.png", "wb") as f: # Failsafe save just in case
-               st.session_state.base_image.save(f, format="PNG")
-
-with tab2:
-    col_r1, col_r2 = st.columns([1, 2])
-    with col_r1:
-        st.markdown("### Heavy Refinement")
-        st.write("Upscales the base image and adds extreme high-frequency details (textures, lighting, sharp edges) using an Image-To-Image pass.")
-        strength = st.slider("Denoising Strength (Change Tolerance)", 0.0, 1.0, 0.75, 0.05, help="0.0 applies no changes. 1.0 completely replaces the image with a new generation.")
-        
-        refine_btn = st.button("💎 Run High-Res Refiner", type="primary", use_container_width=True)
+    generate_btn = st.button("🚀 Generate Draft Concept", use_container_width=True)
     
-    with col_r2:
-        if refine_btn:
-            if not st.session_state.models_loaded:
-                st.error("⚠️ Please click 'Initialize Engine' in the sidebar first!")
-            elif st.session_state.base_image is None:
-                st.warning("🖼️ You must generate a Base Draft in Stage 1 first!")
-            else:
-                with st.spinner("Enhancing details and removing artifacts..."):
-                    clear_memory() 
-                    input_img = st.session_state.base_image.resize((768, 768)) # Upscale
-                    start_time = time.time()
-                    try:
-                        refined = generate_refined_image(
-                            st.session_state.pipe_img2img,
-                            prompt,
-                            negative_prompt,
-                            input_img,
-                            strength=strength,
-                            guidance_scale=guidance_scale,
-                            num_inference_steps=inference_steps,
-                            seed=seed
-                        )
-                        st.image(refined, caption=f"Stage 2: Refined Masterpiece (768x768 | Strength: {strength})", use_container_width=True)
-                        st.success(f"Refinement finished in {time.time() - start_time:.1f} seconds!")
-                        
-                        st.session_state.refined_image = refined
-                    except RuntimeError as e:
-                        st.error(f"Refinement Error: {e}")
+    if generate_btn:
+        if not st.session_state.models_loaded:
+            st.error("⚠️ Initialize Engine first!")
+        else:
+            with st.spinner("Weaving Latent Space..."):
+                clear_memory()
+                load_scheduler(st.session_state.pipe_t2i, scheduler_choice)
+                start_time = time.time()
+                try:
+                    img = generate_advanced_image(
+                        st.session_state.pipe_t2i,
+                        prompt,
+                        negative_prompt,
+                        guidance_scale,
+                        inference_steps,
+                        seed
+                    )
+                    st.session_state.base_image = img
+                    st.success(f"Drafted in {time.time() - start_time:.1f}s")
+                except Exception as e:
+                    st.error(f"Error: {e}")
+
+    if st.session_state.base_image:
+        st.image(st.session_state.base_image, caption="Stage 1: Base Concept Draft (512x512)", use_column_width=True)
+        # Failsafe save
+        st.session_state.base_image.save("outputs/basic_t2i.png")
+
+with col_right:
+    st.markdown("#### 🪄 Stage 2: Heavy Refinement")
+    st.caption("Upscales and adds high-frequency details/textures.")
+    
+    strength = st.slider("Denoising Strength", 0.0, 1.0, 0.75, 0.05, 
+                        help="0.0 = no change, 1.0 = total repaint.")
+    
+    refine_btn = st.button("💎 Run High-Res Refiner", type="primary", use_container_width=True)
+    
+    if refine_btn:
+        if not st.session_state.models_loaded:
+            st.error("⚠️ Initialize Engine first!")
+        elif st.session_state.base_image is None:
+            st.warning("🖼️ Generate a Draft in Stage 1 first!")
+        else:
+            with st.spinner("Enhancing details..."):
+                clear_memory() 
+                target_size = (512, 512) if device == "mps" else (768, 768)
+                input_img = st.session_state.base_image.resize(target_size)
+                start_time = time.time()
+                try:
+                    refined = generate_refined_image(
+                        st.session_state.pipe_img2img,
+                        prompt,
+                        negative_prompt,
+                        input_img,
+                        strength=strength,
+                        guidance_scale=guidance_scale,
+                        num_inference_steps=inference_steps,
+                        seed=seed
+                    )
+                    st.session_state.refined_image = refined
+                    st.success(f"Refined in {time.time() - start_time:.1f}s")
+                except Exception as e:
+                    st.error(f"Error: {e}")
+
+    if "refined_image" in st.session_state and st.session_state.refined_image:
+        st.image(st.session_state.refined_image, 
+                 caption=f"Stage 2: Refined Masterpiece ({target_size[0]}x{target_size[1]})", 
+                 use_column_width=True)
+        # Save output
+        st.session_state.refined_image.save("outputs/refined_output.png")

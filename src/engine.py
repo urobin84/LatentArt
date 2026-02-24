@@ -12,7 +12,8 @@ def setup_pipeline(model_id="runwayml/stable-diffusion-v1-5", device="cpu"):
     """
     Inisialisasi pipeline berdasarkan device.
     """
-    dtype = torch.float16 if device in ["cuda", "mps"] else torch.float32
+    # Use float32 for MPS as it is more stable and prevents black images
+    dtype = torch.float16 if device == "cuda" else torch.float32
     
     pipe = StableDiffusionPipeline.from_pretrained(
         model_id, 
@@ -22,10 +23,11 @@ def setup_pipeline(model_id="runwayml/stable-diffusion-v1-5", device="cpu"):
     )
     
     if device == "mps":
+        pipe = pipe.to("mps")
+        # Memory optimizations for MPS (Safe for most versions)
         pipe.enable_attention_slicing()
         pipe.enable_vae_slicing()
         pipe.enable_vae_tiling()
-        pipe.enable_model_cpu_offload()
     elif device == "cuda":
         pipe = pipe.to("cuda")
         pipe.enable_xformers_memory_efficient_attention()
@@ -78,9 +80,12 @@ def setup_refiner_pipeline(model_id="runwayml/stable-diffusion-v1-5", device="cp
     """
     Inisialisasi pipeline Img2Img untuk proses refinement.
     """
-    dtype = torch.float16 if device in ["cuda", "mps"] else torch.float32
+    # Use float32 for MPS for stability
+    dtype = torch.float16 if device == "cuda" else torch.float32
     
-    if base_components:
+    # On MPS, avoid sharing components if it causes "view size" errors
+    # or ensure they are properly initialized
+    if base_components and device != "mps":
         pipe = StableDiffusionImg2ImgPipeline(**base_components)
     else:
         pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
@@ -91,10 +96,10 @@ def setup_refiner_pipeline(model_id="runwayml/stable-diffusion-v1-5", device="cp
         )
     
     if device == "mps":
+        pipe = pipe.to("mps")
         pipe.enable_attention_slicing()
         pipe.enable_vae_slicing()
         pipe.enable_vae_tiling()
-        pipe.enable_model_cpu_offload()
     elif device == "cuda":
         if not base_components:
             pipe = pipe.to("cuda")
@@ -125,7 +130,8 @@ def setup_inpaint_pipeline(model_id="runwayml/stable-diffusion-inpainting", devi
     """
     Inisialisasi pipeline khusus Inpainting/Outpainting.
     """
-    dtype = torch.float16 if device in ["cuda", "mps"] else torch.float32
+    # Use float32 for MPS for stability
+    dtype = torch.float16 if device == "cuda" else torch.float32
     
     pipe = StableDiffusionInpaintPipeline.from_pretrained(
         model_id, 
@@ -135,10 +141,10 @@ def setup_inpaint_pipeline(model_id="runwayml/stable-diffusion-inpainting", devi
     )
     
     if device == "mps":
+        pipe = pipe.to("mps")
         pipe.enable_attention_slicing()
         pipe.enable_vae_slicing()
         pipe.enable_vae_tiling()
-        pipe.enable_model_cpu_offload()
     elif device == "cuda":
         pipe = pipe.to("cuda")
         pipe.enable_xformers_memory_efficient_attention()
