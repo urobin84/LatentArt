@@ -9,9 +9,10 @@ pipeline:
 	jupyter nbconvert --execute --to notebook --inplace LatentArt_Pipeline_submission_BFGAI_Muhammad_Muqorrobin.ipynb
 
 # Menjalankan Streamlit Notebook secara otomatis (headless)
-# (Akan men-generate file logic.py dan menjalankan Streamlit di background)
+# Kemudian langsung menjalankan server Streamlit (bisa dibuka di browser)
 streamlit:
-	jupyter nbconvert --execute --to notebook --inplace LatentArt_Streamlit_submission_BFGAI_Muhammad_Muqorrobin.ipynb
+	jupyter nbconvert --execute --to notebook --inplace LatentArt_Streamlit_submission_BFGAI_Muhammad_Muqorrobin.ipynb || true
+	.venv/bin/streamlit run app.py
 
 # Membungkus proyek ke dalam satu file .zip untuk disubmit
 zip:
@@ -23,4 +24,4 @@ zip:
 
 # Membersihkan file autogenerate (.py, zip, dll)
 clean:
-	rm -f BFGAI_Muhammad_Muqorrobin.zip logic.py app.py
+	rm -f BFGAI_Muhammad_Muqorrobin.zip
