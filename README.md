@@ -8,54 +8,55 @@ Selamat datang di proyek **LatentArt**! Proyek ini merupakan implementasi model 
 - **Eksperimentasi Parameter**: Melakukan uji coba pada `guidance_scale` dan `num_inference_steps` untuk melihat pengaruhnya pada hasil.
 - **Two-Stage Generation (Refiner)**: Pipa bertingkat menggunakan Text-to-Image lalu disempurnakan (refined) dengan modul Image-to-Image (Denoising strength 0.8) untuk kualitas gambar resolusi tinggi.
 - **Inpainting & Outpainting**: Manipulasi area tertentu dari sebuah gambar dan Zoom-Out dengan perkuatan `runwayml/stable-diffusion-inpainting`. Termasuk masker manual serta otomatis.
-- **Device-Agnostic Execution**: Dirancang untuk dapat berjalan optimal baik di CPU lokal, Apple Silicon (MPS), maupun Google Colab (CUDA) menggunakan `torch.float16`.
+- **Interface Streamlit**: Antarmuka interaktif yang mudah digunakan untuk eksplorasi Text-to-Image, Inpainting, dan Outpainting secara real-time.
+- **Device-Agnostic Execution**: Dirancang untuk dapat berjalan optimal baik di CPU lokal, Apple Silicon (MPS), maupun Google Colab (CUDA) menggunakan komputasi yang efisien.
 
-## 📂 Struktur Repositori
+## 📂 Struktur Proyek
 
 ```text
 LatentArt/
 │
-├── .github/          # (Optional) GitHub Actions workflow
-├── assets/           # Material yang dibutuhkan seperti template gambar (Inpainting)
-├── notebooks/
-│   └── LatentArt_Submission.ipynb  # Notebook Eksperimen (Colab-ready)
-├── outputs/          # Hasil luaran generator image disimpan di sini (diabaikan oleh git)
-├── src/
-│   ├── __init__.py
-│   ├── engine.py     # Setup pipeline, scheduler logic (Euler A, DPM++, DDIM)
-│   └── utils.py      # Device & memory handler (CUDA, MPS, CPU)
-├── Makefile          # Utility script untuk setup environment dan run
-├── README.md         # Dokumentasi Repositori
-└── requirements.txt  # Project dependencies list
+├── LatentArt_Pipeline_submission_BFGAI_Muhammad_Muqorrobin.ipynb     # Notebook Pipeline Eksperimen utama
+├── LatentArt_Streamlit_submission_BFGAI_Muhammad_Muqorrobin.ipynb    # Notebook Streamlit App beserta pembuatan logic.py & app.py
+├── video_demo_aplikasi_BFGAI.mp4                                     # Video demonstrasi aplikasi
+├── requirements.txt                                                  # Daftar dependensi yang dibutuhkan
+├── Makefile                                                          # Perintah otomatisasi (run, build, zip)
+└── README.md                                                         # Dokumentasi Repositori
 ```
 
 ## 🚀 Cara Menjalankan
 
-### Opsi A: Google Colab (Maksimal Performa)
+Proyek ini telah dilengkapi dengan `Makefile` untuk mempermudah eksekusi:
 
-Kami **sangat merekomendasikan** menggunakan Google Colab (dengan T4 GPU / memori 15GB).
+### 1. Membuka Jupyter Notebook
+Untuk menjalankan dan mengedit notebook secara interaktif, gunakan perintah berikut:
+```bash
+make jupyter
+```
 
-1. Upload seluruh folder `LatentArt` ini ke Google Drive Anda (misal ke `MyDrive/LatentArt`).
-2. Buka `notebooks/LatentArt_Submission.ipynb` menggunakan Google Colab.
-3. Ubah *runtime type* menjadi **GPU (T4 / T4 High-RAM)**.
-4. Jalankan Cell Inisialisasi Colab (yang berada di paling atas) untuk otomatis memasang modul requirements (`pip install`) dan me-mount Google Drive.
-5. Eksekusi dari cell awal ke akhir.
+### 2. Menjalankan Pipeline Notebook (Otomatis)
+Untuk menjalankan keseluruhan notebook Pipeline dari awal hingga akhir tanpa membuka antarmuka Jupyter:
+```bash
+make pipeline
+```
 
-### Opsi B: Komputer Lokal (Python / Streamlit Interface)
+### 3. Menjalankan Aplikasi Streamlit
+Perintah ini akan secara otomatis menjalankan proses persiapan (headless run) pada notebook Streamlit yang akan meng-generate *source code* Streamlit ke direktori lokal (seperti `logic.py` dan `app.py`), lalu langsung meluncurkan web server Streamlit:
+```bash
+make streamlit
+```
 
-Jika Anda memiliki sistem yang memadai seperti GPU berbasis CUDA atau Apple Silicon (M1/M2), bisa menjalankannya di VSCode/Terminal.
+### 4. Membuat File Submission (Zip)
+Untuk membungkus file yang dibutuhkan (`notebooks`, `requirements.txt`, `video`) ke dalam satu arsip zip sesuai format target pengumpulan:
+```bash
+make zip
+```
 
-1. **Setup Lingkungan** (membuat `.venv` dan install `requirements.txt`):
-   ```bash
-   make setup
-   ```
-2. **Aktifkan Environment**:
-   *   Mac/Linux: `source .venv/bin/activate`
-   *   Windows: `.\\.venv\\Scripts\\activate`
-3. **Mulai UI Generator Gambar (Streamlit)** *(Tahapan Implementasi Berjalan)*:
-   ```bash
-   make run
-   ```
+### 5. Membersihkan File Output
+Untuk menghapus file arsip `.zip` dan file cache otomatis lainnya:
+```bash
+make clean
+```
 
 ## 🧠 Model dan Syarat Teknis
 
@@ -65,4 +66,4 @@ Proyek ini dipersiapkan dengan parameter spesifik:
 - **Negative Prompt default**: *"photorealistic, realistic, photograph, 3d render, messy, blurry, low quality, bad art, ugly, sketch, grainy, unfinished, chromatic aberration"*
 
 ---
-**Dikembangkan oleh [Nama Anda/Kelompok] untuk Image Generation Submission.**
+**Dikembangkan oleh Muhammad Muqorrobin untuk Image Generation Submission.**
