@@ -11,6 +11,15 @@ Selamat datang di proyek **LatentArt**! Proyek ini merupakan implementasi model 
 - **Interface Streamlit**: Antarmuka interaktif yang mudah digunakan untuk eksplorasi Text-to-Image, Inpainting, dan Outpainting secara real-time.
 - **Device-Agnostic Execution**: Dirancang untuk dapat berjalan optimal baik di CPU lokal, Apple Silicon (MPS), maupun Google Colab (CUDA) menggunakan komputasi yang efisien.
 
+## 🎥 Demonstrasi Aplikasi
+
+Lihat cuplikan interaktif dari aplikasi Streamlit yang telah berjalan pada video di bawah ini:
+
+<video width="100%" controls>
+  <source src="video_demo_aplikasi_BFGAI.mp4" type="video/mp4">
+  Browser Anda tidak mendukung tag video. Silakan buka file <code>video_demo_aplikasi_BFGAI.mp4</code> secara manual.
+</video>
+
 ## 📂 Struktur Proyek
 
 ```text
